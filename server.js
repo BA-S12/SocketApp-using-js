@@ -10,6 +10,5 @@ wss.on("connection", (ws)=>{
 
     ws.on("message", (msg)=>{
         console.log("msg: "+msg)
-        ws.send("Hi client")
     })
 })
