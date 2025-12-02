@@ -1,7 +1,10 @@
 import WebSocket from "ws"
 import readline from "readline"
 
+
+
 const socket = new WebSocket("ws://localhost:8080")
+
 
 
 

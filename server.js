@@ -1,6 +1,8 @@
 import {WebSocketServer} from "ws"
+import fs from "fs"
 
 const PORT = 8080
+const filePath = "./message.txt"
 
 const wss = new WebSocketServer({port:PORT})
 
@@ -10,5 +12,6 @@ wss.on("connection", (ws)=>{
 
     ws.on("message", (msg)=>{
         console.log("msg: "+msg)
+        fs.appendFileSync(filePath, msg)
     })
 })
