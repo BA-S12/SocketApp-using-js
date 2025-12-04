@@ -77,9 +77,13 @@ socket.onopen = () => {
 
 socket.onmessage = (event) => {
   console.log(event.data.toString());
-  rl.prompt();
+    process.stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+    console.log(`Server ${event.data.toString()}`)
+    rl.prompt(true);
 };
 
 socket.onclose = () => {
   console.log("Disconnected");
+  process.exit(0);
 };
