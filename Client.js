@@ -48,13 +48,16 @@ const handleLogin = () => {
 
       rl.question("Enter youe name: ", (name) => {
         const user = {
-          id: maxId + 1,
+          id: maxId == -Infinity ? 1 : maxId + 1,
           name,
         };
         const cuurentUsers = readMessages();
         cuurentUsers.push(user);
         fs.writeFileSync(filePath, JSON.stringify(cuurentUsers));
+              console.log(`Your ID is ${user.id}`);
+              startChat(user);
       });
+
     }
 
     if (foundUser) {
@@ -72,15 +75,15 @@ rl.setPrompt("--->");
 
 socket.onopen = () => {
   console.log("The server is connected");
-    handleLogin();
+  handleLogin();
 };
 
 socket.onmessage = (event) => {
   console.log(event.data.toString());
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
-    console.log(`Server ${event.data.toString()}`)
-    rl.prompt(true);
+  process.stdout.clearLine(0);
+  process.stdout.cursorTo(0);
+  console.log(`Server ${event.data.toString()}`);
+  rl.prompt(true);
 };
 
 socket.onclose = () => {
