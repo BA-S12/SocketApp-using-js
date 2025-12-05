@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
 import { resolve } from "path";
+import { start } from "repl";
 
 const socket = new WebSocket("ws://localhost:8080");
 
@@ -20,28 +21,36 @@ const readMessages = () => {
   return [];
 };
 
-const privateMessage = (fromId)=>{
-  return new Promise((resolve,reject)=>{
+const privateMessage = (fromId) => {
+  return new Promise((resolve, reject) => {
+    rl.question("Enter the id of user, to message it: ", (id) => {
+      try {
+   
+        const data = fs.readFileSync(filePath, "utf-8");
+        const dataArray = JSON.parse(data);
+        const foundUser = dataArray.find((user) => user.id === Number(id));
 
-  
-  rl.question("Enter the id of user, to message it",(id)=>{
-    const data = fs.readFileSync(filePath,"utf-8")
-    const dataArray = JSON.parse(data)
-    const foundUser = dataArray.find((user)=> user.id === Number(id))
-    if(!foundUser){
-      console.log("User not found")
-    }
-    return {
-      type: "privateMessage",
-      from : fromId,
-      toUser: id,
-    }
+        if (!foundUser) {
+          console.log("User not found");
+          resolve(null); 
+        }
 
-  }})
-}
+
+        const messagePacket = {
+          type: "privateMessage",
+          from: fromId,
+          toUser: id,
+        };
+
+        resolve(messagePacket);
+      } catch (error) {
+        reject(error); 
+      }
+    });
+  });
+};
 
 const startChat = (user) => {
-
   console.log("Type 'exit' to quit");
   rl.setPrompt(`${user.name} >`);
   rl.prompt();
@@ -57,8 +66,8 @@ const startChat = (user) => {
   });
 };
 
-const handleLogin = () => {
-  rl.question("Enter yout ID: (if you haven`t account enter 0)", (id) => {
+const handleLogin =  () => {
+  rl.question("Enter yout ID: (if you haven`t account enter 0)", async (id) => {
     const data = fs.readFileSync(filePath, "utf-8");
     const dataArray = JSON.parse(data);
     const foundUser = dataArray.find((user) => user.id === Number(id));
@@ -67,7 +76,7 @@ const handleLogin = () => {
       const ids = dataArray.map((user) => user.id);
       const maxId = Math.max(...ids);
 
-      rl.question("Enter youe name: ", (name) => {
+      rl.question("Enter youe name: ", async (name) => {
         const user = {
           id: maxId == -Infinity ? 1 : maxId + 1,
           name,
@@ -75,21 +84,29 @@ const handleLogin = () => {
         const cuurentUsers = readMessages();
         cuurentUsers.push(user);
         fs.writeFileSync(filePath, JSON.stringify(cuurentUsers));
-              console.log(`Your ID is ${user.id}`);
-              privateMessage(user.id);
-              startChat(user);
-      });
+        console.log(`Your ID is ${user.id}`);
 
+        const packet =await privateMessage(user.id);
+        if(packet){
+          socket.send(JSON.stringify(packet));
+        }
+        startChat(user);
+      });
     }
 
     if (foundUser) {
       console.log(`Welcome ${foundUser.name}`);
-      const privateMessage = privateMessage(foundUser.id);
-      console.log(privateMessage)
-      setTimeout(()=>{
-        startChat(foundUser);
+     const packet = await privateMessage(foundUser.id);
         
-      },3000)
+        console.log("Result received:", packet);
+
+      
+        if (packet) {
+             socket.send(JSON.stringify(packet));
+        }
+
+
+        startChat(foundUser);
     }
   });
 };
