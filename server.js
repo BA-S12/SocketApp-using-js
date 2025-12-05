@@ -23,7 +23,8 @@ const readMessages = ()=>{
 
 console.log("WebSocket Server running on port", PORT);
 wss.on("connection", (ws) => {
-  console.log("Client Connected");
+  console.log("Client Connected"); 
+
 
   ws.on("message", (msg) => {
     console.log("msg: " + msg);

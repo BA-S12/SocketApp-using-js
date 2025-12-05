@@ -19,9 +19,26 @@ const readMessages = () => {
   return [];
 };
 
-const startChat = (user) => {
-  console.log("Type 'exit' to quit");
+const privateMessage = (fromId)=>{
+  rl.question("Enter the id of user, to message it",(id)=>{
+    const data = fs.readFileSync(filePath,"utf-8")
+    const dataArray = JSON.parse(data)
+    const foundUser = dataArray.find((user)=> user.id === Number(id))
+    if(!foundUser){
+      console.log("User not found")
+    }
+    return {
+      type: "privateMessage",
+      from : fromId,
+      toUser: id,
+    }
 
+  })
+}
+
+const startChat = (user) => {
+  privateMessage(user.id)
+  console.log("Type 'exit' to quit");
   rl.setPrompt(`${user.name} >`);
   rl.prompt();
   rl.on("line", (input) => {
@@ -30,8 +47,8 @@ const startChat = (user) => {
       rl.close();
       return;
     }
-
-    socket.send(input);
+    socket.send(JSON.stringify(privateMessage,input))
+    // socket.send(input);
     rl.prompt();
   });
 };
@@ -71,10 +88,10 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-rl.setPrompt("--->");
 
 socket.onopen = () => {
   console.log("The server is connected");
+
   handleLogin();
 };
 
