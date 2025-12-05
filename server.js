@@ -18,6 +18,18 @@ const readMessages = () => {
   return [];
 };
 
+const login = () => {
+  try {
+    if (fs.existsSync("./data/login.json")) {
+      const data = fs.readFileSync("./data/login.json", "utf-8");
+      return JSON.parse(data || []);
+    }
+  } catch (err) {
+    console.log("Error reading file: " + err);
+  }
+  return [];
+};
+
 const connectedUsers = new Map();
 
 console.log("WebSocket Server running on port", PORT);
@@ -41,7 +53,6 @@ wss.on("connection", (ws) => {
       }
 
       const reciver = connectedUsers.get(Number(to));
-      console.log(reciver);
 
       if (reciver) {
         reciver.send(
@@ -71,16 +82,37 @@ wss.on("connection", (ws) => {
       });
     }
 
-    console.log("msg: " + msg);
-    const message = {
-      id: Date.now().toString(),
-      timestamb: new Date().toISOString(),
-      message: msg.toString(),
-    };
+    let message = JSON.parse(msg);
+    let registerLog;
+    if (message.type === "register") {
+      registerLog = {
+        id: Date.now().toString(),
+        timestamb: new Date().toISOString(),
+        user: ws.userId?.toString(),
+      };
+    } else {
+      message = {
+        id: Date.now().toString(),
+
+        from: ws.userId?.toString() ?? message.from?.toString() ?? "unknown",
+
+        to: message.to?.toString() || "public",
+
+        type: message.type?.toString() || "unknown",
+
+        timestamb: new Date().toISOString(),
+
+        message: message.text?.toString() || "null",
+      };
+    }
 
     const currentMessages = readMessages();
     currentMessages.push(message);
 
-    fs.writeFileSync(filePath, JSON.stringify(currentMessages));
+    const LoginLog = login();
+    LoginLog.push(registerLog);
+
+    fs.writeFileSync("./data/login.json", JSON.stringify(LoginLog, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(currentMessages, null, 2));
   });
 });
