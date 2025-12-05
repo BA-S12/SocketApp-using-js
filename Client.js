@@ -1,8 +1,24 @@
 import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
+import { exec } from "child_process";
 
 const socket = new WebSocket("ws://localhost:8080");
+
+// const runServer = () => {
+//   exec("npm run start", (error, stdout, stderr) => {
+//     if (error) {
+//       console.error(`Error: ${error.message}`);
+//       return;
+//     }
+//     if (stderr) console.error(`stderr: ${stderr}`);
+//     if (stdout) console.log(`stdout: ${stdout}`);
+//   });
+// };
+
+// if (!socket ) {
+//  runServer();
+// }
 
 const filePath = "./data/users.json";
 
@@ -59,23 +75,20 @@ const startChat = (user) => {
     }
 
     if (input.startsWith("@")) {
-
       const spcaeIndex = input.indexOf(" ");
       let to;
       let text;
 
-      if(spcaeIndex !== -1){
+      if (spcaeIndex !== -1) {
         to = Number(input.substring(1, spcaeIndex));
-        text = input.substring(spcaeIndex+1);
-      }
-      else{
+        text = input.substring(spcaeIndex + 1);
+      } else {
         let i = 1;
-        while(i<input.length && !isNaN(input[i])) i++;
-        to =  Number(input.substring(1,i));
+        while (i < input.length && !isNaN(input[i])) i++;
+        to = Number(input.substring(1, i));
         text = input.substring(i);
       }
 
-      
       socket.send(
         JSON.stringify({
           type: "privateMessage",
