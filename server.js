@@ -30,6 +30,7 @@ wss.on("connection", (ws) => {
 
     if (data.type == "register") {
       connectedUsers.set(data.userId, ws);
+      console.log("ws: "+ws)
       ws.userId = data.userId;
       console.log(`User regitsered: ${data.userId}`);
     }
@@ -39,7 +40,10 @@ wss.on("connection", (ws) => {
       if (from === toUser) {
         console.log("you can`t send message to yourself");
       }
-      const recwiver = connectedUsers.get(toUser);
+      console.log("to user:"+toUser);
+      const recwiver = connectedUsers.get(Number(toUser));
+      console.log(recwiver);  
+      console.log("recvuer" + recwiver)
 
       if (recwiver) {
         recwiver.send(

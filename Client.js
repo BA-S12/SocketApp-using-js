@@ -19,33 +19,33 @@ const readMessages = () => {
   return [];
 };
 
-const privateMessage = (fromId) => {
-  return new Promise((resolve, reject) => {
-    rl.question("Enter the id of user, to message it: ", (id) => {
-      try {
-        const data = fs.readFileSync(filePath, "utf-8");
-        const dataArray = JSON.parse(data);
-        const foundUser = dataArray.find((user) => user.id === Number(id));
+// const privateMessage = (fromId) => {
+//   return new Promise((resolve, reject) => {
+//     rl.question("Enter the id of user, to message it: ", (id) => {
+//       try {
+//         const data = fs.readFileSync(filePath, "utf-8");
+//         const dataArray = JSON.parse(data);
+//         const foundUser = dataArray.find((user) => user.id === Number(id));
 
-        if (!foundUser) {
-          console.log("User not found");
-          resolve(null);
-        }
+//         if (!foundUser) {
+//           console.log("User not found");
+//           resolve(null);
+//         }
 
-        const messagePacket = {
-          type: "privateMessage",
-          from: fromId,
-          toUser: id,
-          text: "Hello",
-        };
+//         const messagePacket = {
+//           type: "privateMessage",
+//           from: fromId,
+//           toUser: id,
+//           text: "Hello",
+//         };
 
-        resolve(messagePacket);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
-};
+//         resolve(messagePacket);
+//       } catch (error) {
+//         reject(error);
+//       }
+//     });
+//   });
+// };
 
 const startChat = (user) => {
   console.log("Type 'exit' to quit");
@@ -119,8 +119,8 @@ const handleLogin = () => {
     if (foundUser) {
       socket.send(JSON.stringify({ type: "register", userId: foundUser.id }));
 
-      const packet = await privateMessage(foundUser.id);
-      if (packet) socket.send(JSON.stringify(packet));
+      // const packet = await privateMessage(foundUser.id);
+      // if (packet) socket.send(JSON.stringify(packet));
 
       startChat(foundUser);
     }
