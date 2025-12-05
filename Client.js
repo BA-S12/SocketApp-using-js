@@ -1,6 +1,7 @@
 import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
+import { resolve } from "path";
 
 const socket = new WebSocket("ws://localhost:8080");
 
@@ -20,6 +21,9 @@ const readMessages = () => {
 };
 
 const privateMessage = (fromId)=>{
+  return new Promise((resolve,reject)=>{
+
+  
   rl.question("Enter the id of user, to message it",(id)=>{
     const data = fs.readFileSync(filePath,"utf-8")
     const dataArray = JSON.parse(data)
@@ -33,11 +37,11 @@ const privateMessage = (fromId)=>{
       toUser: id,
     }
 
-  })
+  }})
 }
 
 const startChat = (user) => {
-  privateMessage(user.id)
+
   console.log("Type 'exit' to quit");
   rl.setPrompt(`${user.name} >`);
   rl.prompt();
@@ -47,8 +51,8 @@ const startChat = (user) => {
       rl.close();
       return;
     }
-    socket.send(JSON.stringify(privateMessage,input))
-    // socket.send(input);
+    // socket.send(JSON.stringify(input))
+    socket.send(input);
     rl.prompt();
   });
 };
@@ -72,6 +76,7 @@ const handleLogin = () => {
         cuurentUsers.push(user);
         fs.writeFileSync(filePath, JSON.stringify(cuurentUsers));
               console.log(`Your ID is ${user.id}`);
+              privateMessage(user.id);
               startChat(user);
       });
 
@@ -79,7 +84,12 @@ const handleLogin = () => {
 
     if (foundUser) {
       console.log(`Welcome ${foundUser.name}`);
-      startChat(foundUser);
+      const privateMessage = privateMessage(foundUser.id);
+      console.log(privateMessage)
+      setTimeout(()=>{
+        startChat(foundUser);
+        
+      },3000)
     }
   });
 };
