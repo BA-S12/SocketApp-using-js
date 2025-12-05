@@ -1,6 +1,5 @@
 import { WebSocketServer } from "ws";
 import fs from "fs";
-import { Socket } from "dgram";
 
 const PORT = 8080;
 const filePath = "./data/message.json";
@@ -29,24 +28,23 @@ wss.on("connection", (ws) => {
     const data = JSON.parse(msg);
 
     if (data.type == "register") {
-      connectedUsers.set(data.userId, ws);
-      console.log("ws: "+ws)
+      connectedUsers.set(Number(data.userId), ws);
       ws.userId = data.userId;
       console.log(`User regitsered: ${data.userId}`);
     }
 
     if (data.type === "privateMessage") {
-      const { from, toUser } = data;
-      if (from === toUser) {
-        console.log("you can`t send message to yourself");
+      const { from, to } = data;
+      if (from === to) {
+        ws.send(JSON.stringify({ error: "You can't message yourself" }));
+        return;
       }
-      console.log("to user:"+toUser);
-      const recwiver = connectedUsers.get(Number(toUser));
-      console.log(recwiver);  
-      console.log("recvuer" + recwiver)
 
-      if (recwiver) {
-        recwiver.send(
+      const reciver = connectedUsers.get(Number(to));
+      console.log(reciver);
+
+      if (reciver) {
+        reciver.send(
           JSON.stringify({
             type: "private",
             from: data.from,
@@ -56,7 +54,7 @@ wss.on("connection", (ws) => {
       } else {
         ws.send(
           JSON.stringify({
-            error: "User is offoline",
+            error: "User is offonline",
           })
         );
       }
@@ -64,14 +62,12 @@ wss.on("connection", (ws) => {
 
     if (data.type === "chat") {
       wss.clients.forEach((client) => {
-
-          client.send(
-            JSON.stringify({
-              from: data.from,
-              text: data.text,
-            })
-          );
-        
+        client.send(
+          JSON.stringify({
+            from: data.from,
+            text: data.text,
+          })
+        );
       });
     }
 

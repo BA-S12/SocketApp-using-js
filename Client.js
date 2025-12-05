@@ -6,7 +6,7 @@ const socket = new WebSocket("ws://localhost:8080");
 
 const filePath = "./data/users.json";
 
-const readMessages = () => {
+const readUsers = () => {
   try {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, "utf-8");
@@ -59,15 +59,28 @@ const startChat = (user) => {
     }
 
     if (input.startsWith("@")) {
-      const [to, ...mesParts] = input.split(" ");
-      const toUser = to.slice(1);
-      const text = mesParts.join(" ");
 
+      const spcaeIndex = input.indexOf(" ");
+      let to;
+      let text;
+
+      if(spcaeIndex !== -1){
+        to = Number(input.substring(1, spcaeIndex));
+        text = input.substring(spcaeIndex+1);
+      }
+      else{
+        let i = 1;
+        while(i<input.length && !isNaN(input[i])) i++;
+        to =  Number(input.substring(1,i));
+        text = input.substring(i);
+      }
+
+      
       socket.send(
         JSON.stringify({
           type: "privateMessage",
           from: user.id,
-          toUser,
+          to,
           text,
         })
       );
@@ -101,7 +114,7 @@ const handleLogin = () => {
           id: maxId == -Infinity ? 1 : maxId + 1,
           name,
         };
-        const cuurentUsers = readMessages();
+        const cuurentUsers = readUsers();
         cuurentUsers.push(user);
         fs.writeFileSync(filePath, JSON.stringify(cuurentUsers));
         console.log(`Your ID is ${user.id}`);
@@ -118,9 +131,6 @@ const handleLogin = () => {
 
     if (foundUser) {
       socket.send(JSON.stringify({ type: "register", userId: foundUser.id }));
-
-      // const packet = await privateMessage(foundUser.id);
-      // if (packet) socket.send(JSON.stringify(packet));
 
       startChat(foundUser);
     }
@@ -139,17 +149,24 @@ socket.onopen = () => {
 };
 
 socket.onmessage = (event) => {
-  console.log(event.data.toString());
+  // console.log(event.data.toString());
 
   const data = JSON.parse(event.data);
 
   process.stdout.clearLine(0);
   process.stdout.cursorTo(0);
-  console.log(`Server ${event.data.toString()}`);
+
+  if (data.error) {
+    console.log(data.error);
+    return;
+  }
+
+  const users = readUsers();
+  const user = users.find((user) => user.id === data.from);
   if (data.type === "private") {
-    console.log(`\n [PRIVATE] From ${data.from}: ${data.text}`);
+    console.log(`\n [PRIVATE] ${user.name}: ${data.text}`);
   } else {
-    console.log(`\n [PUBLIC] From ${data.from}: ${data.text}`);
+    console.log(`\n [PUBLIC] ${user.name}: ${data.text}`);
   }
 
   rl.prompt(true);
