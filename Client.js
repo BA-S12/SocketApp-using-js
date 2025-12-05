@@ -1,8 +1,6 @@
 import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
-import { resolve } from "path";
-import { start } from "repl";
 
 const socket = new WebSocket("ws://localhost:8080");
 
@@ -25,26 +23,25 @@ const privateMessage = (fromId) => {
   return new Promise((resolve, reject) => {
     rl.question("Enter the id of user, to message it: ", (id) => {
       try {
-   
         const data = fs.readFileSync(filePath, "utf-8");
         const dataArray = JSON.parse(data);
         const foundUser = dataArray.find((user) => user.id === Number(id));
 
         if (!foundUser) {
           console.log("User not found");
-          resolve(null); 
+          resolve(null);
         }
-
 
         const messagePacket = {
           type: "privateMessage",
           from: fromId,
           toUser: id,
+          text: "Hello",
         };
 
         resolve(messagePacket);
       } catch (error) {
-        reject(error); 
+        reject(error);
       }
     });
   });
@@ -60,13 +57,36 @@ const startChat = (user) => {
       rl.close();
       return;
     }
-    // socket.send(JSON.stringify(input))
-    socket.send(input);
+
+    if (input.startsWith("@")) {
+      const [to, ...mesParts] = input.split(" ");
+      const toUser = to.slice(1);
+      const text = mesParts.join(" ");
+
+      socket.send(
+        JSON.stringify({
+          type: "privateMessage",
+          from: user.id,
+          toUser,
+          text,
+        })
+      );
+    } else {
+      socket.send(
+        JSON.stringify({
+          type: "chat",
+          from: user.id,
+          text: input,
+        })
+      );
+    }
+
+    // socket.send(input);
     rl.prompt();
   });
 };
 
-const handleLogin =  () => {
+const handleLogin = () => {
   rl.question("Enter yout ID: (if you haven`t account enter 0)", async (id) => {
     const data = fs.readFileSync(filePath, "utf-8");
     const dataArray = JSON.parse(data);
@@ -85,28 +105,24 @@ const handleLogin =  () => {
         cuurentUsers.push(user);
         fs.writeFileSync(filePath, JSON.stringify(cuurentUsers));
         console.log(`Your ID is ${user.id}`);
+        socket.send(
+          JSON.stringify({
+            type: "register",
+            userId: user.id,
+          })
+        );
 
-        const packet =await privateMessage(user.id);
-        if(packet){
-          socket.send(JSON.stringify(packet));
-        }
         startChat(user);
       });
     }
 
     if (foundUser) {
-      console.log(`Welcome ${foundUser.name}`);
-     const packet = await privateMessage(foundUser.id);
-        
-        console.log("Result received:", packet);
+      socket.send(JSON.stringify({ type: "register", userId: foundUser.id }));
 
-      
-        if (packet) {
-             socket.send(JSON.stringify(packet));
-        }
+      const packet = await privateMessage(foundUser.id);
+      if (packet) socket.send(JSON.stringify(packet));
 
-
-        startChat(foundUser);
+      startChat(foundUser);
     }
   });
 };
@@ -124,9 +140,18 @@ socket.onopen = () => {
 
 socket.onmessage = (event) => {
   console.log(event.data.toString());
+
+  const data = JSON.parse(event.data);
+
   process.stdout.clearLine(0);
   process.stdout.cursorTo(0);
   console.log(`Server ${event.data.toString()}`);
+  if (data.type === "private") {
+    console.log(`\n [PRIVATE] From ${data.from}: ${data.text}`);
+  } else {
+    console.log(`\n [PUBLIC] From ${data.from}: ${data.text}`);
+  }
+
   rl.prompt(true);
 };
 
