@@ -83,13 +83,17 @@ wss.on("connection", (ws) => {
     }
 
     let message = JSON.parse(msg);
-    let registerLog;
+
     if (message.type === "register") {
-      registerLog = {
+      const registerLog = {
         id: Date.now().toString(),
         timestamb: new Date().toISOString(),
         user: ws.userId?.toString(),
       };
+      const LoginLog = login();
+      LoginLog.push(registerLog);
+
+      fs.writeFileSync("./data/login.json", JSON.stringify(LoginLog, null, 2));
     } else {
       message = {
         id: Date.now().toString(),
@@ -109,10 +113,6 @@ wss.on("connection", (ws) => {
     const currentMessages = readMessages();
     currentMessages.push(message);
 
-    const LoginLog = login();
-    LoginLog.push(registerLog);
-
-    fs.writeFileSync("./data/login.json", JSON.stringify(LoginLog, null, 2));
     fs.writeFileSync(filePath, JSON.stringify(currentMessages, null, 2));
   });
 });

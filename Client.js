@@ -1,6 +1,7 @@
 import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
+import { error } from "console";
 
 const socket = new WebSocket("ws://localhost:8080");
 
@@ -131,9 +132,13 @@ socket.onmessage = (event) => {
   const users = readUsers();
   const user = users.find((user) => user.id === data.from);
   if (data.type === "private") {
+    if(data.error){
+       console.log("\x1b[31m Error:" + data.error + "\x1b[0m");
+       
+    }
     console.log(`\n \x1b[36m [PRIVATE] ${user.name}: ${data.text}\x1b[0m`);
   } else {
-    console.log(`\n [PUBLIC] ${user.name}: ${data.text}`);
+    console.log(`\x1b[32m[PUBLIC] ${user.name}: ${data.text}\x1b[0m`);
   }
 
   rl.prompt(true);
