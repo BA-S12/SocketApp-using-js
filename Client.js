@@ -1,24 +1,8 @@
 import WebSocket from "ws";
 import readline from "readline";
 import fs from "fs";
-import { exec } from "child_process";
 
 const socket = new WebSocket("ws://localhost:8080");
-
-// const runServer = () => {
-//   exec("npm run start", (error, stdout, stderr) => {
-//     if (error) {
-//       console.error(`Error: ${error.message}`);
-//       return;
-//     }
-//     if (stderr) console.error(`stderr: ${stderr}`);
-//     if (stdout) console.log(`stdout: ${stdout}`);
-//   });
-// };
-
-// if (!socket ) {
-//  runServer();
-// }
 
 const filePath = "./data/users.json";
 
@@ -35,33 +19,6 @@ const readUsers = () => {
   return [];
 };
 
-// const privateMessage = (fromId) => {
-//   return new Promise((resolve, reject) => {
-//     rl.question("Enter the id of user, to message it: ", (id) => {
-//       try {
-//         const data = fs.readFileSync(filePath, "utf-8");
-//         const dataArray = JSON.parse(data);
-//         const foundUser = dataArray.find((user) => user.id === Number(id));
-
-//         if (!foundUser) {
-//           console.log("User not found");
-//           resolve(null);
-//         }
-
-//         const messagePacket = {
-//           type: "privateMessage",
-//           from: fromId,
-//           toUser: id,
-//           text: "Hello",
-//         };
-
-//         resolve(messagePacket);
-//       } catch (error) {
-//         reject(error);
-//       }
-//     });
-//   });
-// };
 
 const startChat = (user) => {
   console.log("Type 'exit' to quit");
@@ -106,8 +63,6 @@ const startChat = (user) => {
         })
       );
     }
-
-    // socket.send(input);
     rl.prompt();
   });
 };
