@@ -19,7 +19,6 @@ const readUsers = () => {
   return [];
 };
 
-
 const startChat = (user) => {
   console.log("Type 'exit' to quit");
   rl.setPrompt(`${user.name} >`);
@@ -117,22 +116,22 @@ socket.onopen = () => {
 };
 
 socket.onmessage = (event) => {
-  // console.log(event.data.toString());
-
   const data = JSON.parse(event.data);
 
   process.stdout.clearLine(0);
   process.stdout.cursorTo(0);
 
   if (data.error) {
-    console.log(data.error);
+    console.log("\x1b[31m Error:" + data.error + "\x1b[0m");
+
+    rl.prompt(true);
     return;
   }
 
   const users = readUsers();
   const user = users.find((user) => user.id === data.from);
   if (data.type === "private") {
-    console.log(`\n [PRIVATE] ${user.name}: ${data.text}`);
+    console.log(`\n \x1b[36m [PRIVATE] ${user.name}: ${data.text}\x1b[0m`);
   } else {
     console.log(`\n [PUBLIC] ${user.name}: ${data.text}`);
   }
@@ -141,6 +140,7 @@ socket.onmessage = (event) => {
 };
 
 socket.onclose = () => {
+  console.log("\x1b[31m Disconnected from the server\x1b[0m");
   console.log("Disconnected");
   process.exit(0);
 };
